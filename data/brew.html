@@ -1,0 +1,134 @@
+<!--Contains the control elements needed for the brew process and displays data received from the controller-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/favicon.png" rel="icon" type="image/x-icon" />
+    <title>Brausteuerung</title>
+</head>
+<body>
+<div>
+    <h2>Brausteuerung</h2>
+    <button type="button" onclick="loadDoc()">AJAX Test</button>
+    <span id="doc-content">nothing here yet...</span>
+</div>
+
+<div>
+    <h2 id="header-temp">Temp test</h2>
+    <button id="button-temp" onclick="wsUpdateTemp()">Temp</button>
+
+    <label for="temperature">Temperatur:</label>
+    <input type="text" id="temperature" name="temperature"><br><br>
+    <label for="speed">Geschwindigkeit:</label>
+    <input type="text" id="speed" name="speed"><br><br>
+    <button id="button-update" onclick="changeTemp()">Update</button>
+</div>
+
+<div id="chart_div" style="width:auto; height:auto"></div>
+<button id="button-add-row" onclick="addRow()">Add Dicks</button>
+
+
+</body>
+<script>
+    //Websocket
+    let ws = null;
+    ws = new WebSocket('ws://' + document.location.host + '/ws', ['arduino']);
+
+    ws.onmessage = function (event) {
+        //document.getElementById('header-temp').innerText = event.data;
+        addRow(Math.floor(Math.random() * 101));
+    }
+
+    function wsUpdateTemp() {
+        ws.send(document.getElementById('temperature').value);
+    }
+
+    //Request sensor data from esp8266 to display in graph etc
+    function requestData() {
+
+    }
+
+    //test function for ajax
+    function loadDoc() {
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("doc-content").innerHTML =
+                    this.responseText;
+            }
+        };
+        xhttp.open("GET", "/data", true);
+        xhttp.send();
+    }
+
+    //POST new temperature to esp8266 to update
+    function changeTemp() {
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/update", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("temp=" + document.getElementById("temperature").value);
+    }
+</script>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    let data;
+    let chart;
+    let rowIndex = 0;
+    // Set chart options
+    let options = {
+        animation: {
+            duration: 500,
+            easing: 'in'
+        },
+
+        title: 'Temperaturverlauf',
+        hAxis: {
+            viewWindow: {min:0, max:14},
+            title: 'Time'
+        },
+        vAxis: {
+            title: 'Temperature'
+        }
+    }
+
+    // Load the Visualization API and the piechart package.
+    google.charts.load('current', {'packages': ['corechart', 'line']});
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.charts.setOnLoadCallback(drawChart);
+
+    // Callback that creates and populates a data table,
+    // instantiates the line chart, passes in the data and
+    // draws it.
+    function drawChart() {
+        // Create our data table.
+        data = new google.visualization.DataTable();
+        data.addColumn('number', 'X');
+        data.addColumn('number', 'Temperature');
+        // Instantiate and draw our chart, passing in some options.
+        chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+    }
+
+    function addRow(value) {
+        console.log('addRow()');
+        data.addRow(
+            [rowIndex, value]
+        );
+        rowIndex ++;
+
+        //Update drawn data plots if graph is full
+        if (rowIndex >= 13){
+            options.hAxis.viewWindow.min += 1;
+            options.hAxis.viewWindow.max += 1;
+        }
+
+        chart.draw(data, options);
+    }
+
+</script>
+<style>
+
+</style>
+</html>
