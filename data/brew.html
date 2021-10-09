@@ -9,23 +9,15 @@
 <body>
 <div>
     <h2>Brausteuerung</h2>
-    <button type="button" onclick="loadDoc()">AJAX Test</button>
-    <span id="doc-content">nothing here yet...</span>
-</div>
+    <div id="chart_div" style="width:auto; height:auto"></div>
 
-<div>
-    <h2 id="header-temp">Temp test</h2>
-    <button id="button-temp" onclick="wsUpdateTemp()">Temp</button>
 
     <label for="temperature">Temperatur:</label>
-    <input type="text" id="temperature" name="temperature"><br><br>
-    <label for="speed">Geschwindigkeit:</label>
-    <input type="text" id="speed" name="speed"><br><br>
-    <button id="button-update" onclick="changeTemp()">Update</button>
+    <input type="text" id="temperature" name="temperature">
+    <button id="button-temp" onclick="wsUpdateTemp()">Ändern</button>
 </div>
 
-<div id="chart_div" style="width:auto; height:auto"></div>
-<button id="button-add-row" onclick="addRow()">Add Dicks</button>
+
 
 
 </body>
@@ -35,10 +27,11 @@
     ws = new WebSocket('ws://' + document.location.host + '/ws', ['arduino']);
 
     ws.onmessage = function (event) {
-        //document.getElementById('header-temp').innerText = event.data;
+        document.getElementById('header-temp').innerText = event.data;
         addRow(Math.floor(Math.random() * 101));
     }
 
+    //Send new temp value via websocket to webserver
     function wsUpdateTemp() {
         ws.send(document.getElementById('temperature').value);
     }
@@ -72,24 +65,25 @@
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-    let data;
+    let data = [[0, 0]];
     let chart;
     let rowIndex = 0;
     // Set chart options
     let options = {
+        pointSize: 10,
+        series: {
+            0: {pointShape: 'circle'},
+        },
         animation: {
             duration: 500,
             easing: 'in'
         },
-
         title: 'Temperaturverlauf',
         hAxis: {
             viewWindow: {min:0, max:14},
-            title: 'Time'
         },
-        vAxis: {
-            title: 'Temperature'
-        }
+        width: 1000,
+        height: 500
     }
 
     // Load the Visualization API and the piechart package.
