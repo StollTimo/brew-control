@@ -13,7 +13,7 @@
 
 
     <label for="temperature">Temperatur:</label>
-    <input type="text" id="temperature" name="temperature">
+    <input type="number" id="temperature" name="temperature" value="0" min="0">
     <button id="button-temp" onclick="wsUpdateTemp()">Ändern</button>
 </div>
 
@@ -27,18 +27,25 @@
     ws = new WebSocket('ws://' + document.location.host + '/ws', ['arduino']);
 
     ws.onmessage = function (event) {
-        document.getElementById('header-temp').innerText = event.data;
+        document.title = event.data.toString() + '°C';
         addRow(Math.floor(Math.random() * 101));
     }
 
     //Send new temp value via websocket to webserver
     function wsUpdateTemp() {
-        ws.send(document.getElementById('temperature').value);
+        let tempValue = document.getElementById('temperature').value;//
+        if(tempValue >= 0 && tempValue !== null){
+            ws.send(tempValue);
+            console.log('new temperature: ' + tempValue);
+        }else{
+            alert("Please enter a new temperature!");
+            document.getElementById('temperature').value = 0;
+        }
     }
 
-    //Request sensor data from esp8266 to display in graph etc
+    //Request sensor data from esp8266 to display in graph etc periodically
     function requestData() {
-
+        setInterval(function(){ wsUpdateTemp() }, 3000);
     }
 
     //test function for ajax

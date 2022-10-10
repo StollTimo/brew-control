@@ -44,6 +44,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
         os_printf("%s\n", (char*)data);//prints actual value of passed data
         Serial.print("Temperature: ");
         Serial.println((char*)data);
+       
+        
       } else {
         for(size_t i=0; i < info->len; i++){
           os_printf("%02x ", data[i]);
@@ -51,7 +53,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
         os_printf("\n");
       }
       if(info->opcode == WS_TEXT)
-        client->text("I got your text message");
+        //client->text("I got your text message");
+        client->text((char*)random(0, 100));
       else
         client->binary("I got your binary message");
     } else {
@@ -156,4 +159,5 @@ void updateTemperature(){
 void loop() {
   ws.textAll("15");
   delay(2000);
+  ws.cleanupClients();
 }
